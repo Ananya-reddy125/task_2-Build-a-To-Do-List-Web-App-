@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Advanced Ultra App - Login + Dashboard + To-Do + Habit + Storage</title>
+<style>
+/* GLOBAL RESET */
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{
+  background:url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=80') no-repeat center center/cover;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  transition:0.4s;
+}
+body.dark{background:linear-gradient(135deg,#000,#111);}
+
+/* LOGIN BOX */
+.login-box{
+  width:100%;max-width:420px;background:#fff;padding:30px;border-radius:20px;
+  box-shadow:0 0 35px rgba(0,0,0,0.25);
+  animation:fadeIn .8s ease;
+}
+body.dark .login-box{background:#181818;color:white;}
+
+.login-box h2{text-align:center;margin-bottom:20px;}
+
+.login-box input{
+  width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin-bottom:12px;
+}
+body.dark .login-box input{background:#222;border:1px solid #444;color:white;}
+
+.login-btn{
+  width:100%;padding:13px;border:none;border-radius:12px;background:#6a11cb;color:white;
+  cursor:pointer;font-weight:600;margin-top:10px;
+}
+.login-btn:hover{background:#580fa9;}
+
+/* DASHBOARD */
+.dashboard{
+  display:none;width:100%;max-width:900px;background:#fff;padding:25px;border-radius:22px;
+  box-shadow:0 0 40px rgba(0,0,0,.25);
+}
+body.dark .dashboard{background:#181818;color:white;}
+
+.nav{
+  display:flex;gap:15px;justify-content:center;margin-bottom:20px;
+}
+.nav button{
+  padding:10px 16px;border:none;border-radius:10px;background:#e5e7eb;cursor:pointer;
+  font-weight:600;
+}
+.nav button.active{background:#6a11cb;color:white;}
+body.dark .nav button{background:#333;color:#fff;}
+body.dark .nav button.active{background:#8f2bff;}
+
+/* SECTION */
+.section{display:none;animation:fadeIn .7s ease;}
+.section.active{display:block;}
+
+/* TODO & HABIT SHARED STYLES */
+.input-area{display:flex;gap:10px;margin-bottom:15px;}
+.input-area input{
+  flex:1;padding:12px;border-radius:12px;border:1px solid #ddd;
+}
+body.dark .input-area input{background:#222;border-color:#444;color:white;}
+
+.input-area button{
+  padding:12px 18px;border:none;border-radius:12px;background:#6a11cb;color:white;font-weight:600;
+  cursor:pointer;
+}
+.input-area button:hover{background:#580fa9;}
+
+.list{list-style:none;margin-top:15px;}
+.item{
+  background:#f7f7f7;padding:15px;border-radius:14px;margin-bottom:12px;
+  display:flex;justify-content:space-between;align-items:center;border:1px solid #eee;
+}
+body.dark .item{background:#222;border-color:#444;color:white;}
+
+.item span{font-size:1.05rem;cursor:pointer;}
+.completed span{text-decoration:line-through;color:#999;}
+
+.btns button{padding:6px 10px;border:none;border-radius:8px;margin-left:8px;color:white;cursor:pointer;}
+.edit-btn{background:#0ea5e9;}
+.edit-btn:hover{background:#0284c7;}
+.delete-btn{background:#ef4444;}
+.delete-btn:hover{background:#c53030;}
+
+/* DARK MODE BTN */
+.dark-toggle{margin-top:20px;text-align:center;}
+.dark-btn{
+  padding:10px 22px;background:#333;color:white;border:none;border-radius:10px;cursor:pointer;
+}
+.dark-btn:hover{background:#444;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="login-box" id="loginBox">
+  <h2>🚀 Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button class="login-btn" id="loginBtn">Login</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+
+  <div class="nav">
+    <button class="nav-btn active" data-target="todo">To‑Do</button>
+    <button class="nav-btn" data-target="habit">Habit Tracker</button>
+    <button class="nav-btn" data-target="storage">Storage</button>
+  </div>
+
+  <!-- TODO SECTION -->
+  <div class="section active" id="todoSection">
+    <h2>📝 To‑Do List</h2>
+    <div class="input-area">
+      <input type="text" id="todoInput" placeholder="Enter a task...">
+      <button id="addTodoBtn">Add</button>
+    </div>
+    <ul id="todoList" class="list"></ul>
+  </div>
+
+  <!-- HABIT SECTION -->
+  <div class="section" id="habitSection">
+    <h2>🔥 Habit Tracker</h2>
+    <div class="input-area">
+      <input type="text" id="habitInput" placeholder="Enter habit...">
+      <button id="addHabitBtn">Add</button>
+    </div>
+    <ul id="habitList" class="list"></ul>
+  </div>
+
+  <!-- STORAGE VIEWER -->
+  <div class="section" id="storageSection">
+    <h2>📦 Saved Data</h2>
+    <pre id="storageOutput" style="background:#f1f1f1;padding:20px;border-radius:12px;max-height:300px;overflow:auto;"></pre>
+  </div>
+
+  <div class="dark-toggle">
+    <button class="dark-btn" id="darkBtn">Toggle Dark Mode</button>
+  </div>
+
+</div>
+
+<script>
+/* LOGIN */
+const loginBtn=document.getElementById('loginBtn');
+loginBtn.onclick=()=>{
+  if(username.value.trim()===''||password.value.trim()==='')return alert("Enter details");
+  localStorage.setItem('user',username.value);
+  loginBox.style.display='none';dashboard.style.display='block';
+}
+
+/* DARK MODE */
+darkBtn.onclick=()=>{document.body.classList.toggle('dark');};
+
+/* NAVIGATION */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelector('.nav-btn.active').classList.remove('active');
+    btn.classList.add('active');
+    document.querySelector('.section.active').classList.remove('active');
+    document.getElementById(btn.dataset.target+'Section').classList.add('active');
+    if(btn.dataset.target==='storage') showStorage();
+  };
+});
+
+/* TODO LIST */
+let todos=JSON.parse(localStorage.getItem('todos')||'[]');
+
+function renderTodos(){
+  todoList.innerHTML='';
+  todos.forEach((t,i)=>{
+    const li=document.createElement('li');li.className='item';if(t.completed)li.classList.add('completed');
+    const span=document.createElement('span');span.textContent=t.text;
+    span.onclick=()=>{t.completed=!t.completed;saveTodos();renderTodos();};
+    const btns=document.createElement('div');btns.className='btns';
+    const edit=document.createElement('button');edit.className='edit-btn';edit.textContent='Edit';
+    edit.onclick=()=>{
+      let nt=prompt('Edit task',t.text);if(nt){t.text=nt;saveTodos();renderTodos();}
+    };
+    const del=document.createElement('button');del.className='delete-btn';del.textContent='Delete';
+    del.onclick=()=>{todos.splice(i,1);saveTodos();renderTodos();};
+    btns.appendChild(edit);btns.appendChild(del);
+    li.appendChild(span);li.appendChild(btns);
+    todoList.appendChild(li);
+  });
+}
+addTodoBtn.onclick=()=>{
+  let text=todoInput.value.trim();if(!text)return alert('Enter task');
+  todos.push({text,completed:false});saveTodos();renderTodos();todoInput.value='';
+};
+function saveTodos(){localStorage.setItem('todos',JSON.stringify(todos));}
+renderTodos();
+
+/* HABIT TRACKER */
+let habits=JSON.parse(localStorage.getItem('habits')||'[]');
+
+function renderHabits(){
+  habitList.innerHTML='';
+  habits.forEach((h,i)=>{
+    const li=document.createElement('li');li.className='item';if(h.completed)li.classList.add('completed');
+    const span=document.createElement('span');span.textContent=h.text+" — Day "+h.days;
+    span.onclick=()=>{h.completed=!h.completed;saveHabits();renderHabits();};
+    const btns=document.createElement('div');btns.className='btns';
+
+    const track=document.createElement('button');track.className='edit-btn';track.textContent='+ Day';
+    track.onclick=()=>{h.days++;saveHabits();renderHabits();};
+
+    const del=document.createElement('button');del.className='delete-btn';del.textContent='Delete';
+    del.onclick=()=>{habits.splice(i,1);saveHabits();renderHabits();};
+
+    btns.appendChild(track);btns.appendChild(del);
+    li.appendChild(span);li.appendChild(btns);
+    habitList.appendChild(li);
+  });
+}
+addHabitBtn.onclick=()=>{
+  let text=habitInput.value.trim();if(!text)return alert('Enter habit');
+  habits.push({text,days:0,completed:false});saveHabits();renderHabits();habitInput.value='';
+};
+function saveHabits(){localStorage.setItem('habits',JSON.stringify(habits));}
+renderHabits();
+
+/* STORAGE SECTION */
+function showStorage(){
+  storageOutput.textContent=JSON.stringify({user:localStorage.getItem('user'),todos,habits},null,2);
+}
+
+</script>
+</body>
+</html>
